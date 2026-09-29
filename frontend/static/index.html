@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoCompare - Vehicle Catalog & Assistant</title>
+<!-- Optional: used to draw A2UI Icon components -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+<style>
+  :root {
+    --accent: #1a73e8;
+    --accent-dark: #1557b0;
+    --bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --border: #dfe3e8;
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --badge-bg: #e8f0fe;
+    --badge-text: #1967d2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .header-badge {
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+
+  /* Main Split Layout: Vehicle Browser + Chat Pane */
+  #main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Left Panel: Vehicle Browser */
+  #vehicle-browser {
+    width: 360px;
+    min-width: 300px;
+    max-width: 420px;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .browser-header {
+    padding: 0.9rem 1rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+  }
+  .browser-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .browser-count {
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+  }
+  .browser-search {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    outline: none;
+  }
+  .browser-search:focus {
+    border-color: var(--accent);
+  }
+  #vehicle-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .vehicle-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .vehicle-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .vehicle-thumb-container {
+    height: 130px;
+    background: #f1f3f4;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .vehicle-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .vehicle-thumb-placeholder {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  .vehicle-body {
+    padding: 0.7rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .vehicle-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  .vehicle-price-tag {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #188038;
+  }
+  .vehicle-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .spec-chip {
+    font-size: 0.72rem;
+    background: #f1f3f4;
+    color: var(--text-secondary);
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .vehicle-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+  }
+  .btn-action {
+    flex: 1;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.1s ease;
+  }
+  .btn-action:hover {
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    border-color: var(--accent);
+  }
+  .btn-action.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-action.primary:hover {
+    background: var(--accent-dark);
+  }
+
+  /* Right Panel: Chat Interface */
+  #chat-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg);
+  }
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.2rem;
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .msg { margin: 0.8rem 0; }
+  .msg.user { text-align: right; }
+  .bubble {
+    display: inline-block;
+    padding: 0.7rem 1rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    text-align: left;
+    max-width: 90%;
+    white-space: pre-wrap;
+    line-height: 1.45;
+  }
+  .msg.user .bubble {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+  }
+  /* Drop bubble styling when reply contains A2UI cards */
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+  form {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.9rem 1.2rem;
+    border-top: 1px solid var(--border);
+    background: #fff;
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  input#input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+  }
+  input#input:focus {
+    border-color: var(--accent);
+  }
+  button#send-btn {
+    padding: 0.75rem 1.4rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button#send-btn:hover {
+    background: var(--accent-dark);
+  }
+
+  /* A2UI Component Styles (Card, Column, Row, Text, Divider, List, Image, Icon) */
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    max-width: 100%;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: .6rem; }
+  .a2col { display: flex; flex-direction: column; gap: .4rem; }
+  .a2row { display: flex; flex-direction: row; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.4; }
+  .a2text.a2-h1 { font-size: 1.4rem; font-weight: 700; color: #1a73e8; }
+  .a2text.a2-h2 { font-size: 1.2rem; font-weight: 700; }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; }
+  .a2text.a2-h4 { font-size: 0.95rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.85rem; color: #666; }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: .4rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 8px; display: block; margin: 0.4rem 0; }
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-size: 1.25rem;
+    line-height: 1;
+    vertical-align: middle;
+    color: var(--accent);
+  }
+
+  @media (max-width: 768px) {
+    #main-layout { flex-direction: column; }
+    #vehicle-browser { width: 100%; max-width: 100%; height: 260px; border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AutoCompare Assistant</h1>
+  <span class="header-badge">Agent Engine Ready</span>
+</header>
+
+<div id="main-layout">
+  <!-- Left Panel: Vehicle Browser for Fetched Vehicles -->
+  <aside id="vehicle-browser">
+    <div class="browser-header">
+      <div class="browser-title">
+        <span>Fetched Vehicles</span>
+        <span id="vehicle-count" class="browser-count">Loading…</span>
+      </div>
+      <input id="browser-search" class="browser-search" placeholder="Filter vehicles (e.g. BMW, EV, Coupe)…">
+    </div>
+    <div id="vehicle-list">
+      <div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+        Loading catalog…
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Panel: Chat Stream -->
+  <main id="chat-pane">
+    <div id="log">
+      <div class="msg agent">
+        <div class="bubble">Welcome to AutoCompare! You can browse the fetched vehicles in the sidebar or ask questions about specs, cargo space, and comparisons.</div>
+      </div>
+    </div>
+    <form id="form">
+      <input id="input" placeholder="Ask about specs, compare cars, or luggage capacity…" autocomplete="off" autofocus>
+      <button id="send-btn">Send</button>
+    </form>
+  </main>
+</div>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const vehicleList = document.getElementById("vehicle-list");
+const vehicleCount = document.getElementById("vehicle-count");
+const browserSearch = document.getElementById("browser-search");
+
+let allVehicles = [];
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function bubble(who) {
+  const m = el("div", "msg " + who);
+  const b = el("div", "bubble");
+  m.appendChild(b);
+  log.appendChild(m);
+  log.scrollTop = log.scrollHeight;
+  return b;
+}
+
+/* ----------------------------------------------------------------------------
+ * A2UI mini-renderer (v0.8 Basic Catalog subset).
+ * Renders Card / Column / Row / Text / Divider / List / Image / Icon.
+ * -------------------------------------------------------------------------- */
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+function iconName(n) {
+  return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase();
+}
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card");
+      kids().forEach(n => d.appendChild(n));
+      return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col");
+      kids().forEach(n => d.appendChild(n));
+      return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n));
+      return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) return null;
+      const img = el("img", "a2img");
+      img.src = src;
+      img.alt = boundStr(props.alt) || "";
+      return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined");
+      s.textContent = iconName(boundStr(props.name) || props.name);
+      return s;
+    }
+    default:
+      return null;
+  }
+}
+
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {
+    const referenced = new Set();
+    for (const id in comps) {
+      const spec = comps[id];
+      childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c));
+    }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) {
+    const node = buildNode(rid, comps, new Set());
+    if (node) { container.appendChild(node); drew = true; }
+  }
+  return drew;
+}
+
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function renderReply(b, parts) {
+  b.textContent = "";
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) b.appendChild(el("div", null, textStr));
+
+  if (a2ui.length) {
+    b.classList.add("rich");
+    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+  }
+  if (!b.childNodes.length) b.textContent = "(no response)";
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ----------------------------------------------------------------------------
+ * Chat Message Dispatcher
+ * -------------------------------------------------------------------------- */
+async function sendMessage(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  bubble("user").textContent = trimmed;
+  input.value = "";
+  const b = bubble("agent");
+  b.textContent = "…";
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: trimmed })
+    });
+    const raw = await res.text();
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`);
+    }
+    renderReply(b, data.parts || []);
+  } catch (e) {
+    b.textContent = "Error: " + e.message;
+  }
+}
+
+form.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  sendMessage(input.value);
+});
+
+/* ----------------------------------------------------------------------------
+ * Vehicle Browser Logic
+ * -------------------------------------------------------------------------- */
+function renderVehicleCards(vehicles) {
+  vehicleList.innerHTML = "";
+  vehicleCount.textContent = vehicles.length;
+
+  if (vehicles.length === 0) {
+    vehicleList.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">No vehicles found.</div>';
+    return;
+  }
+
+  vehicles.forEach((car) => {
+    const card = el("div", "vehicle-card");
+
+    // Thumbnail: front_angled or trunk or fallback
+    const thumbContainer = el("div", "vehicle-thumb-container");
+    const photoUrl = car.front_angled_image_url || car.trunk_space_image_url || car.open_trunk_luggage_image_url;
+    if (photoUrl) {
+      const img = el("img", "vehicle-thumb");
+      img.src = photoUrl;
+      img.alt = `${car.year || ''} ${car.make || ''} ${car.model || ''}`;
+      img.loading = "lazy";
+      img.onerror = () => {
+        thumbContainer.innerHTML = '<div class="vehicle-thumb-placeholder">AutoCompare</div>';
+      };
+      thumbContainer.appendChild(img);
+    } else {
+      thumbContainer.innerHTML = '<div class="vehicle-thumb-placeholder">AutoCompare</div>';
+    }
+    card.appendChild(thumbContainer);
+
+    const body = el("div", "vehicle-body");
+
+    // Title
+    const fullName = `${car.year || ''} ${car.make || ''} ${car.model || ''}`.trim();
+    body.appendChild(el("h3", "vehicle-name", fullName));
+
+    // Price & Category
+    const priceText = car.price_msrp ? `$${Number(car.price_msrp).toLocaleString()}` : "Price TBD";
+    const subLine = `${priceText} · ${car.body_style || 'Vehicle'} · ${car.fuel_type || 'Gas'}`;
+    body.appendChild(el("div", "vehicle-price-tag", subLine));
+
+    // Chips
+    const chips = el("div", "vehicle-chips");
+    if (car.horsepower) chips.appendChild(el("span", "spec-chip", `${car.horsepower} HP`));
+    if (car.zero_to_sixty_mph) chips.appendChild(el("span", "spec-chip", `${car.zero_to_sixty_mph}s 0-60`));
+    if (car.cargo_volume_cu_ft) chips.appendChild(el("span", "spec-chip", `${car.cargo_volume_cu_ft} cu ft`));
+    body.appendChild(chips);
+
+    // Quick Actions
+    const actions = el("div", "vehicle-actions");
+    const btnSpecs = el("button", "btn-action primary", "Specs");
+    btnSpecs.title = "Ask agent about full vehicle specifications";
+    btnSpecs.onclick = () => sendMessage(`Tell me about the ${fullName} specifications and key features.`);
+
+    const btnTrunk = el("button", "btn-action", "Trunk");
+    btnTrunk.title = "Ask agent for luggage & cargo visualization";
+    btnTrunk.onclick = () => sendMessage(`Show me the trunk space and luggage capacity for the ${fullName}.`);
+
+    const btnCompare = el("button", "btn-action", "Compare");
+    btnCompare.title = "Compare this car with another";
+    btnCompare.onclick = () => {
+      input.value = `Compare ${fullName} with `;
+      input.focus();
+    };
+
+    actions.appendChild(btnSpecs);
+    actions.appendChild(btnTrunk);
+    actions.appendChild(btnCompare);
+    body.appendChild(actions);
+
+    card.appendChild(body);
+    vehicleList.appendChild(card);
+  });
+}
+
+async function loadVehicles() {
+  try {
+    const res = await fetch("/api/vehicles");
+    const data = await res.json();
+    if (data.vehicles && Array.isArray(data.vehicles)) {
+      allVehicles = data.vehicles;
+      renderVehicleCards(allVehicles);
+    } else {
+      vehicleList.innerHTML = '<div style="padding: 1rem; text-align: center; color: red;">Failed to load vehicles.</div>';
+    }
+  } catch (e) {
+    vehicleList.innerHTML = `<div style="padding: 1rem; text-align: center; color: red;">Error: ${e.message}</div>`;
+  }
+}
+
+browserSearch.addEventListener("input", () => {
+  const q = browserSearch.value.toLowerCase().trim();
+  if (!q) {
+    renderVehicleCards(allVehicles);
+    return;
+  }
+  const filtered = allVehicles.filter(v => {
+    const haystack = `${v.make || ''} ${v.model || ''} ${v.year || ''} ${v.body_style || ''} ${v.fuel_type || ''} ${(v.tags || []).join(' ')}`.toLowerCase();
+    return haystack.includes(q);
+  });
+  renderVehicleCards(filtered);
+});
+
+// Load catalog on page load
+loadVehicles();
+</script>
+</body>
+</html>
