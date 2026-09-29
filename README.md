@@ -1,7 +1,13 @@
 # auto-compare
 
-Simple ReAct agent
-Agent generated with `agents-cli` version `1.4.0`
+![AutoCompare Demo](demo.gif)
+
+**AutoCompare** is an intelligent automotive comparison agent built with Google ADK, Agent Runtime, and Gemini. It features:
+- **Vehicle Catalog & Comparisons**: Queries Firestore vehicle specifications and compares models side-by-side across performance, price, and specs.
+- **NHTSA Safety & Recalls**: Retrieves official safety ratings and recalls.
+- **Vertex AI Memory Bank**: Persists user driving preferences, budget constraints, and vehicle criteria across sessions.
+- **A2UI Rich Interfaces**: Emits structured A2UI (v0.8) cards with specifications and Cloud Storage trunk/luggage visualization images.
+- **Interactive Web Interface**: Custom FastAPI frontend proxy over the A2A protocol with a live vehicle browser sidebar.
 
 ## Project Structure
 
